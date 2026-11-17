@@ -26,6 +26,8 @@ computer without the app running.
 ## Install
 
 ```bash
+git clone https://github.com/okms/haste-control.git
+cd haste-control
 scripts/build-app.sh --install
 ```
 
@@ -45,4 +47,20 @@ See [docs/PROTOCOL.md](docs/PROTOCOL.md) for the HID protocol and
 [docs/RESEARCH.md](docs/RESEARCH.md) for how it was reverse-engineered
 (public NGenuity USB captures, decrypted stock firmware, live verification).
 
-Unofficial project; not affiliated with HP or HyperX.
+## Acknowledgements
+
+The protocol work builds on research by others:
+
+* [evan-razzaque/open-pulsefire-haste](https://github.com/evan-razzaque/open-pulsefire-haste) —
+  protocol notes and NGenuity USB captures for this mouse (GPL-3.0; no code from
+  it is included here, captured packet bytes are used as test vectors)
+* [santeri3700/hyperx_pulsefire_dart_reverse_engineering](https://github.com/santeri3700/hyperx_pulsefire_dart_reverse_engineering) —
+  the original NGenuity2 protocol documentation (Pulsefire Dart)
+* [Perchanxe/HyperX-PulsefireHaste-Range-Fix](https://github.com/Perchanxe/HyperX-PulsefireHaste-Range-Fix) —
+  source of the stock firmware images analysed (not redistributed here)
+
+## License
+
+[MIT](LICENSE). HyperX and Pulsefire are trademarks of HP Inc. This is an
+unofficial project, not affiliated with or endorsed by HP or HyperX. Use at
+your own risk.
