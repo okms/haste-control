@@ -161,9 +161,28 @@ public final class HIDTransport {
         }
     }
 
+    /// Opcodes that were written but never acknowledged (diagnostics).
+    public private(set) var unacknowledgedOps: Set<UInt8> = []
+
     /// Send several packets in order, each waiting for its acknowledgement.
-    public func send(_ packets: [[UInt8]]) async throws {
-        for p in packets { _ = try await request(p) }
+    /// A missing ack on an individual packet is tolerated (some write opcodes
+    /// may not reply), but if *no* packet is answered the mouse is assumed to
+    /// be unreachable (asleep) and `HasteError.timeout` is thrown.
+    public func send(_ packets: [[UInt8]], ackTimeout: TimeInterval = 0.6) async throws {
+        var answered = 0
+        var firstTimeout: Error?
+        for p in packets {
+            do {
+                _ = try await request(p, timeout: ackTimeout)
+                answered += 1
+            } catch let e as HasteError {
+                guard case .timeout(let op) = e else { throw e }
+                unacknowledgedOps.insert(op)
+                trace?(String(format: "!! no ack for 0x%02X", op))
+                if firstTimeout == nil { firstTimeout = e }
+            }
+        }
+        if answered == 0, let firstTimeout { throw firstTimeout }
     }
 
     private func serialized<T>(_ op: @escaping @MainActor () async throws -> T) async throws -> T {
