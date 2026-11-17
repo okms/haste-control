@@ -5,17 +5,20 @@ import SwiftUI
 @MainActor
 enum Shared {
     static let store = MouseStore()
+    static let profiles = ProfileManager(store: store)
 }
 
 @main
 struct HasteBarApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     private let store = Shared.store
+    private let profiles = Shared.profiles
 
     var body: some Scene {
         MenuBarExtra {
             MenuPopover()
                 .environment(store)
+                .environment(profiles)
         } label: {
             MenuBarLabel(store: store)
         }
@@ -24,6 +27,7 @@ struct HasteBarApp: App {
         Window("HyperX Pulsefire Haste", id: "settings") {
             SettingsView()
                 .environment(store)
+                .environment(profiles)
                 .frame(minWidth: 720, minHeight: 520)
         }
         .windowResizability(.contentMinSize)

@@ -3,7 +3,7 @@ import ServiceManagement
 import SwiftUI
 
 enum SettingsPage: String, CaseIterable, Identifiable {
-    case performance, lighting, buttons, macros, power, device
+    case performance, lighting, buttons, macros, profiles, power, device
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -11,6 +11,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         case .lighting: "Lighting"
         case .buttons: "Buttons"
         case .macros: "Macros"
+        case .profiles: "Profiles"
         case .power: "Battery & Power"
         case .device: "Device"
         }
@@ -21,6 +22,7 @@ enum SettingsPage: String, CaseIterable, Identifiable {
         case .lighting: "lightbulb.led"
         case .buttons: "computermouse"
         case .macros: "keyboard"
+        case .profiles: "square.stack.3d.up"
         case .power: "battery.75percent"
         case .device: "info.circle"
         }
@@ -53,6 +55,7 @@ struct SettingsView: View {
                         case .lighting: LightingPage()
                         case .buttons: ButtonsPage()
                         case .macros: MacrosPage()
+                        case .profiles: ProfilesPage()
                         case .power: PowerPage()
                         case .device: DevicePage()
                         }
@@ -60,7 +63,7 @@ struct SettingsView: View {
                     .padding(24)
                     .frame(maxWidth: 680, alignment: .leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .disabled(store.connection != .ready && page != .power && page != .device && page != .macros)
+                    .disabled(store.connection != .ready && page != .power && page != .device && page != .macros && page != .profiles)
                 }
                 StatusBar()
             }
@@ -106,7 +109,7 @@ struct StatusBar: View {
     }
 }
 
-struct Section<Content: View>: View {
+struct PageSection<Content: View>: View {
     let title: String
     var subtitle: String? = nil
     @ViewBuilder var content: Content
@@ -128,7 +131,7 @@ struct PerformancePage: View {
     var body: some View {
         @Bindable var store = store
         VStack(alignment: .leading) {
-            Section(title: "DPI profiles",
+            PageSection(title: "DPI profiles",
                     subtitle: "Up to five sensitivity levels. The DPI button on the mouse cycles through enabled profiles; the indicator colour flashes when you switch.") {
                 if let d = store.dpi {
                     Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
@@ -146,13 +149,13 @@ struct PerformancePage: View {
                     }
                 } else { ProgressView() }
             }
-            Section(title: "Polling rate", subtitle: "How often the mouse reports its position. 1000 Hz is smoothest; lower rates extend battery life.") {
+            PageSection(title: "Polling rate", subtitle: "How often the mouse reports its position. 1000 Hz is smoothest; lower rates extend battery life.") {
                 Picker("Polling rate", selection: Binding(get: { store.polling ?? .hz1000 }, set: { store.setPolling($0) })) {
                     ForEach(PollingRate.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented).labelsHidden().frame(maxWidth: 420)
             }
-            Section(title: "Lift-off distance", subtitle: "Height at which the sensor stops tracking when you lift the mouse.") {
+            PageSection(title: "Lift-off distance", subtitle: "Height at which the sensor stops tracking when you lift the mouse.") {
                 if store.dpi != nil {
                     Picker("Lift-off distance", selection: Binding(
                         get: { store.dpi?.liftOff ?? .low },
@@ -223,7 +226,7 @@ struct LightingPage: View {
     var body: some View {
         @Bindable var store = store
         VStack(alignment: .leading) {
-            Section(title: "Effect", subtitle: "Effects run on the mouse itself and are kept in its onboard memory — no app needs to be running.") {
+            PageSection(title: "Effect", subtitle: "Effects run on the mouse itself and are kept in its onboard memory — no app needs to be running.") {
                 Picker("Effect", selection: Binding(get: { store.lighting.effect }, set: { e in
                     store.lighting.effect = e
                     if e == .cycle && store.lighting.colors.count < 2 { store.lighting.colors = LightingConfig.defaultPalette }
@@ -235,7 +238,7 @@ struct LightingPage: View {
                 .pickerStyle(.radioGroup).labelsHidden()
             }
             if store.lighting.effect != .off {
-                Section(title: store.lighting.effect == .cycle ? "Colours" : "Colour") {
+                PageSection(title: store.lighting.effect == .cycle ? "Colours" : "Colour") {
                     if store.lighting.effect == .cycle {
                         PaletteEditor()
                     } else {
@@ -253,19 +256,19 @@ struct LightingPage: View {
                         }
                     }
                 }
-                Section(title: "Brightness") {
+                PageSection(title: "Brightness") {
                     LabeledSlider(value: Binding(get: { store.lighting.brightness }, set: {
                         store.lighting.brightness = $0; store.scheduleLightingApply()
                     }), suffix: "%")
                 }
                 if store.lighting.effect.usesSpeed {
-                    Section(title: "Speed") {
+                    PageSection(title: "Speed") {
                         LabeledSlider(value: Binding(get: { store.lighting.speed }, set: {
                             store.lighting.speed = $0; store.scheduleLightingApply()
                         }), suffix: "%")
                     }
                 }
-                Section(title: "Preview") {
+                PageSection(title: "Preview") {
                     LightingPreview(config: store.lighting)
                 }
             }
@@ -339,7 +342,7 @@ struct ButtonsPage: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Section(title: "Button assignments",
+            PageSection(title: "Button assignments",
                     subtitle: "Remap any of the six buttons. Keyboard keys and macros are sent by the mouse as a USB keyboard, so they work everywhere without this app running.") {
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
                     ForEach(PhysicalButton.allCases) { b in
@@ -437,10 +440,10 @@ struct PowerPage: View {
     var body: some View {
         @Bindable var store = store
         VStack(alignment: .leading) {
-            Section(title: "Battery") {
+            PageSection(title: "Battery") {
                 BatteryCard(compact: false).frame(maxWidth: 360)
             }
-            Section(title: "Mouse charge warning",
+            PageSection(title: "Mouse charge warning",
                     subtitle: "The mouse's LED blinks to warn you when the battery falls below this level (stored on the mouse).") {
                 HStack {
                     Slider(value: Binding(get: { deviceWarn }, set: { deviceWarn = $0.rounded() }), in: 5...25) { editing in
@@ -451,7 +454,7 @@ struct PowerPage: View {
                 }
                 .disabled(store.connection != .ready)
             }
-            Section(title: "macOS notifications") {
+            PageSection(title: "macOS notifications") {
                 Toggle("Notify when the battery is low", isOn: $store.notifyLowBattery)
                 HStack {
                     Text("Threshold")
@@ -460,7 +463,7 @@ struct PowerPage: View {
                 .disabled(!store.notifyLowBattery)
                 Toggle("Notify when fully charged", isOn: $store.notifyFullyCharged)
             }
-            Section(title: "Menu bar") {
+            PageSection(title: "Menu bar") {
                 Toggle("Show battery percentage next to the icon", isOn: $store.showPercentInMenuBar)
                 Toggle("Open at login", isOn: Binding(get: { loginItem }, set: { on in
                     do {
@@ -485,7 +488,7 @@ struct DevicePage: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Section(title: "Connection") {
+            PageSection(title: "Connection") {
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                     row("Status", store.statusText)
                     row("Mouse firmware", store.mouseFirmware?.version ?? "—")
@@ -495,14 +498,14 @@ struct DevicePage: View {
                     if let b = store.battery { row("Battery voltage", String(format: "%.3f V", Double(b.millivolts) / 1000)) }
                 }
             }
-            Section(title: "Onboard memory",
+            PageSection(title: "Onboard memory",
                     subtitle: "Every change is saved automatically. Use this if you edited settings with another tool.") {
                 HStack {
                     Button("Save all settings to mouse") { store.saveToDevice() }
                     Button("Re-read from mouse") { Task { await store.refreshAll() } }
                 }
             }
-            Section(title: "Restore defaults",
+            PageSection(title: "Restore defaults",
                     subtitle: "Puts DPI (400/800/1600/3200), 1000 Hz polling, default buttons, red lighting and a 10 % charge warning back on the mouse.") {
                 Button("Restore defaults…", role: .destructive) { confirmReset = true }
                     .confirmationDialog("Restore default settings on the mouse?", isPresented: $confirmReset) {

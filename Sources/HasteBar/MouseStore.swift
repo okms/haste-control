@@ -359,6 +359,31 @@ final class MouseStore {
         }
     }
 
+    /// Write a full configuration. `saveToFlash: false` keeps it in RAM only
+    /// (used for automatic per-app switching to avoid flash wear).
+    func applyProfile(dpi newDPI: DPISettings, polling newPolling: PollingRate, lighting newLighting: LightingConfig,
+                      buttons newButtons: [PhysicalButton: ButtonAction], saveToFlash: Bool) {
+        dpi = newDPI
+        polling = newPolling
+        lighting = newLighting
+        perform { [self] in
+            try await self.mouse.transport.send(HasteProtocol.applyDPI(newDPI, save: saveToFlash))
+            try await self.mouse.setPollingRate(newPolling)
+            try await self.mouse.transport.send(LightingEncoder.packets(for: newLighting, save: false))
+            for (b, a) in newButtons where a != .macro && self.buttons[b] != a {
+                try await self.mouse.setButton(b, a)
+            }
+            for (b, a) in newButtons where a == .macro && self.buttons[b] != .macro {
+                if let m = self.macros[b] { try await self.mouse.uploadMacro(m, to: b) }
+            }
+            self.buttons.merge(newButtons) { _, new in new }
+            if saveToFlash {
+                try await self.mouse.saveToDevice()
+                self.lastSaved = Date()
+            }
+        }
+    }
+
     func setDeviceLowBatteryWarning(_ pct: Int) {
         perform { [self] in
             try await mouse.setLowBatteryWarning(pct)

@@ -20,9 +20,9 @@ enum Snapshotter {
             try? await Task.sleep(nanoseconds: 250_000_000)
         }
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        render(MenuPopover().environment(store), size: nil, to: "\(dir)/popover.png")
+        render(MenuPopover().environment(store).environment(Shared.profiles), size: nil, to: "\(dir)/popover.png")
         for page in SettingsPage.allCases {
-            render(SettingsView(page: page).environment(store), size: NSSize(width: 860, height: 640),
+            render(SettingsView(page: page).environment(store).environment(Shared.profiles), size: NSSize(width: 860, height: 640),
                    to: "\(dir)/settings-\(page.rawValue).png")
         }
         render(MenuBarLabel(store: store).padding(4).background(Color(white: 0.92)), size: nil, to: "\(dir)/menubar-label.png")

@@ -22,6 +22,7 @@ struct MenuPopover: View {
                 Divider()
                 DPIQuickPicker()
                 PollingQuickPicker()
+                ProfileQuickPicker()
             }
             if let err = store.lastError {
                 Label(err, systemImage: "exclamationmark.triangle.fill")
