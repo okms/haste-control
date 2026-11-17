@@ -131,7 +131,18 @@ final class MouseStore {
         }
     }
 
+    private var refreshInFlight: Task<Void, Never>?
+
+    /// Re-read everything. Concurrent callers share one in-flight refresh.
     func refreshAll() async {
+        if let running = refreshInFlight { return await running.value }
+        let t = Task { await self.performRefresh() }
+        refreshInFlight = t
+        await t.value
+        refreshInFlight = nil
+    }
+
+    private func performRefresh() async {
         guard mouse.isAttached else { connection = .disconnected; return }
         busy += 1
         defer { busy -= 1 }
@@ -139,10 +150,7 @@ final class MouseStore {
             receiver = try await mouse.receiverInfo()
             let link = try await mouse.link()
             if link == .wireless(awake: false) {
-                connection = .asleep
-                if battery == nil, defaults.object(forKey: Keys.cachedBattery) != nil {
-                    // nothing fresh — keep showing what we had last session
-                }
+                connection = .asleep  // keep showing cached values
                 return
             }
             mouseFirmware = try await mouse.mouseInfo()

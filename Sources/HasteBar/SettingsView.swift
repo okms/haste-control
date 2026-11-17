@@ -194,7 +194,7 @@ struct DPIRow: View {
             Slider(value: Binding(get: { Double(p.dpi) }, set: { v in
                 store.dpi?.profiles[index].dpi = DPISettings.clamp(Int(v), max: settings.maxDPI)
                 store.scheduleDPIApply()
-            }), in: Double(DPISettings.minDPI)...Double(settings.maxDPI), step: Double(DPISettings.dpiStep))
+            }), in: Double(DPISettings.minDPI)...Double(settings.maxDPI))
             .frame(minWidth: 220)
             .disabled(!p.enabled)
 
@@ -278,7 +278,7 @@ struct LabeledSlider: View {
     var suffix = ""
     var body: some View {
         HStack {
-            Slider(value: Binding(get: { Double(value) }, set: { value = Int($0) }), in: 0...100, step: 1)
+            Slider(value: Binding(get: { Double(value) }, set: { value = Int($0.rounded()) }), in: 0...100)
                 .frame(maxWidth: 360)
             Text("\(value)\(suffix)").monospacedDigit().frame(width: 48, alignment: .trailing)
         }
@@ -443,7 +443,7 @@ struct PowerPage: View {
             Section(title: "Mouse charge warning",
                     subtitle: "The mouse's LED blinks to warn you when the battery falls below this level (stored on the mouse).") {
                 HStack {
-                    Slider(value: $deviceWarn, in: 5...25, step: 1) { editing in
+                    Slider(value: Binding(get: { deviceWarn }, set: { deviceWarn = $0.rounded() }), in: 5...25) { editing in
                         if !editing { store.setDeviceLowBatteryWarning(Int(deviceWarn)) }
                     }
                     .frame(maxWidth: 300)
