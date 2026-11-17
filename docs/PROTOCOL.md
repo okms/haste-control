@@ -16,9 +16,13 @@ mouse firmware (🔬). See [RESEARCH.md](RESEARCH.md) for sources and method.
 * Receive: asynchronous input reports on the same interface ✅
 * No TCC / Input-Monitoring permission is needed on macOS for this vendor
   usage page (verified on macOS 27) ✅
-* The dongle relays packets to the mouse over the 2.4 GHz link. If the mouse is
-  asleep, requests that need the mouse still get answered by the dongle (with
-  cached data or `02 ec ac`).
+* The dongle relays packets to the mouse over the 2.4 GHz link. The dongle
+  answers `46` and `50` itself. **When the mouse is asleep (`46` → `01 00`),
+  every request routed to the mouse (`50 05`, `51`, `53`, writes, …) is
+  silently dropped — no reply at all** ✅. Check `46` first and wait for the
+  `FF 03 … awake=1` event (or user movement) before talking to the mouse.
+* No inter-packet delay is required; NGenuity-style back-to-back request/reply
+  works while the mouse is awake ✅.
 
 ### Packet framing
 
