@@ -70,6 +70,14 @@ sends raw packets. Results on the attached mouse (fw 1.1.0.7, dongle 4.1.0.6):
 * Sweep of `40–5F`: only `46 50 51 52 53 54 56 59` reply with data;
   everything else replies `02 ec ac`
 * Unsolicited `FF 03 …` reports arrive on DPI change / wake
+* Every write opcode used by the app acknowledges with `02 ec ac`:
+  `D2 D3 D4 D5 D6 D9 DA DB DE` (session 2, mouse awake)
+* Lighting round-trip: solid `00ff00` → `59` = N 1, `5A 01 00` frame 0 = `00 ff 00`;
+  breathing blue speed 50 → `59` = N 0x41, frames match the capture curve
+* Button round-trip: forward → key A → `54` shows `02 04`; macro bind → `04`
+* `56 <btn>` returns an empty header even with a macro stored — macro
+  read-back needs other parameters (unknown)
+* All test changes were restored (lighting off, forward = Forward)
 
 ## Not yet confirmed
 

@@ -110,20 +110,20 @@ but live in RAM until saved with `DE` (**except** where noted).
 | `D1 00 00 01 <pct>` | Low-battery warning threshold (NGenuity: 5–25 %) ✅ (reflected in `51`[6]) |
 | `D2 00 00 08 <rgb> <rgb> <bri> 00` | Direct LED colour; reverts to onboard effect after ~2 s unless re-sent 📼 |
 | `D2 00 30 08 <rgb> 000000 <bri> <speed>` | Configure **Fade/Trigger** effect; speed byte = `max(0, 63 − round(0.64·s))` for s∈0…100 📼 |
-| `D2 00 40 08 ffffff 000000 64 00` | "store" packet NGenuity sends before non-fade effects 📼 |
+| `D2 00 40 08 ffffff 000000 64 00` | "store" packet NGenuity sends before non-fade effects 📼✅ |
 | `D3 00 00 01 <idx>` | Select active DPI profile ✅ |
 | `D3 01 00 01 <mask>` | Enabled-profile bitmask 📼 |
 | `D3 02 <idx> 02 <lo> <hi>` | DPI step for profile (DPI/100) 📼 |
 | `D3 03 <idx> 03 <r> <g> <b>` | Profile indicator colour 📼 |
 | `D3 05 00 01 <lod> <lod>` | Lift-off distance 1/2 mm 📼 |
-| `D4 <btn> <type> 02 <code> 00` | Button assignment 📼 |
-| `D5 <btn> 00 05 <events> 00 <repeat> 00 00` | Bind macro to button. repeat 0 = once, 2 = toggle, 3 = while held 📼 |
-| `D6 <btn> <seq> <cnt> <events…>` | Macro data chunk (≤ 6 events) 📼 |
-| `D9 00 00 03 55 <frameCount> 23` | Commit onboard LED effect header 📼 |
-| `DA <frameCount> <pkt 0-5> 3c <20 × rgb>` | Onboard LED effect frame table 📼 |
+| `D4 <btn> <type> 02 <code> 00` | Button assignment 📼✅ (reflected in `54`) |
+| `D5 <btn> 00 05 <events> 00 <repeat> 00 00` | Bind macro to button. repeat 0 = once, 2 = toggle, 3 = while held 📼✅ (acked) |
+| `D6 <btn> <seq> <cnt> <events…>` | Macro data chunk (≤ 6 events) 📼✅ (acked) |
+| `D9 00 00 03 55 <frameCount> 23` | Commit onboard LED effect header 📼✅ (read back via `59`) |
+| `DA <frameCount> <pkt 0-5> 3c <20 × rgb>` | Onboard LED effect frame table 📼✅ (read back via `5A`) |
 | `DB 55` | Sent by NGenuity after `D9` (firmware: sets two internal state bytes) 📼🔬 |
 | `DE 03` | Save DPI settings to flash 📼 |
-| `DE FF` | Save **all** settings to flash 📼 |
+| `DE FF` | Save **all** settings to flash 📼✅ (acked) |
 | `DF AA 00` | 🔬 **Factory reset** (copies default tables, clears 6 macro slots). Not exercised. |
 
 ### Physical buttons

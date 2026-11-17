@@ -407,6 +407,7 @@ struct KeyCaptureButton: View {
         Button(capturing ? "Press a key…" : "Record key") {
             capturing ? stop() : start()
         }
+        .fixedSize()
         .onDisappear(perform: stop)
     }
 
